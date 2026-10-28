@@ -10,11 +10,23 @@
       content="Not every door leads to a place. Some lead to a story. AKA Restaurant & Lounge, Mileo The Palm, Dubai."
     />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Self-hosted brand fonts (see src/styles/fonts.css) — both render
+         above the fold immediately (the headline and the nav/brand), so
+         worth the preload rather than waiting on the stylesheet to
+         discover them. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/assets/fonts/IvyPrestoHeadline-Regular.woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/assets/fonts/TTDrugs-Regular.woff2"
+      crossorigin
     />
 
     <!-- Scene 00 is the first paint: fetch its layers immediately, never lazily. -->
@@ -32,8 +44,13 @@
 
     <header class="chrome">
       <a class="brand" href="#scene-00" aria-label="AKA Restaurant &amp; Lounge, home">
-        <span class="brand__mark">AKA</span>
-        <span class="brand__sub">Restaurant &amp; Lounge</span>
+        <img
+          class="brand__logo"
+          src="/assets/brand/aka-logo.svg"
+          alt="AKA Restaurant &amp; Lounge"
+          width="107"
+          height="60"
+        />
       </a>
 
       <!-- Destinations are placeholders (#) until these pages/sections exist. -->

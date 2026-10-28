@@ -56,17 +56,9 @@ stay static.
 
 ## Fonts
 
-Currently loaded: **Cormorant Garamond** (display copy) + **Jost** (UI). Both Google Fonts.
-Swap by editing the `<link>` in `index.html` and the two `--font-*` values in
-`src/styles/tokens.css`.
-
-Alternatives that suit the same dark/gold register:
-
-- Display serif — *Playfair Display* (higher contrast, more fashion-editorial), *EB Garamond*
-  (warmer, bookish), *Marcellus* (roman capitals, more monumental), *Italiana* (very fine,
-  luxury-signage feel).
-- UI sans — *Inter* (neutral workhorse), *DM Sans* (slightly rounder), *Manrope* (geometric),
-  *Archivo* (tighter, more editorial).
+Currently loaded: **IvyPresto Headline** (display copy) + **TT Drugs** (UI). Both self-hosted
+licensed files in `public/assets/fonts/`, declared in `src/styles/fonts.css`. Swap by replacing
+the woff2 files there and the two `--font-*` values in `src/styles/tokens.css`.
 
 ## Colours
 

@@ -1,0 +1,29 @@
+/* ── Brand typefaces ──────────────────────────────────────────────────────
+   Self-hosted, not Google Fonts — IvyPresto Headline and TT Drugs are both
+   licensed files, not available there. woff2 only: every browser this site
+   targets (anything from the last ~6 years) supports it, so there's no
+   fallback format to also ship. */
+
+@font-face {
+  font-family: "IvyPresto Headline";
+  src: url("/assets/fonts/IvyPrestoHeadline-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TT Drugs";
+  src: url("/assets/fonts/TTDrugs-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TT Drugs";
+  src: url("/assets/fonts/TTDrugs-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
