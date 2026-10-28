@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0B0B0B" />
+    <title>AKA — Restaurant &amp; Lounge · Mileo The Palm, Dubai</title>
+    <meta
+      name="description"
+      content="Not every door leads to a place. Some lead to a story. AKA Restaurant & Lounge, Mileo The Palm, Dubai."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Scene 00 is the first paint: fetch its layers immediately, never lazily. -->
+    <link rel="preload" as="video" href="/assets/00-threshold/bg.mp4" fetchpriority="high" />
+    <link rel="preload" as="video" href="/assets/00-threshold/bg-wipe.mp4" />
+    <link rel="preload" as="image" href="/assets/00-threshold/door-left.webp" />
+    <link rel="preload" as="image" href="/assets/00-threshold/door-right.webp" />
+
+    <script type="module" src="/src/main.js"></script>
+  </head>
+
+  <body>
+    <!-- ───────────────────────── persistent chrome ───────────────────────── -->
+    <a class="skip-link" href="#site-footer">Skip the intro</a>
+
+    <header class="chrome">
+      <a class="brand" href="#scene-00" aria-label="AKA Restaurant &amp; Lounge, home">
+        <span class="brand__mark">AKA</span>
+        <span class="brand__sub">Restaurant &amp; Lounge</span>
+      </a>
+
+      <!-- Destinations are placeholders (#) until these pages/sections exist. -->
+      <nav class="primary-nav" aria-label="Primary">
+        <ul class="primary-nav__list">
+          <li><a href="#">Private Dining</a></li>
+          <li><a href="#">Experiences</a></li>
+          <li><a href="#">Journal</a></li>
+          <li><a href="#">Gallery</a></li>
+          <li><a href="#">Menu</a></li>
+        </ul>
+      </nav>
+
+      <a class="reserve" href="#reserve" aria-label="Reserve your night at AKA">
+        <span class="reserve__label">Reserve</span>
+      </a>
+    </header>
+
+    <!-- ───────────────────────────── the story ───────────────────────────── -->
+    <main>
+      <!-- 00 · THRESHOLD ─────────────────────────────────────────────────── -->
+      <section
+        class="scene scene--threshold"
+        id="scene-00"
+        data-scene="00"
+        data-scene-name="Threshold"
+        aria-label="Chapter 00, Threshold"
+      >
+        <div class="scene__pin">
+          <div class="threshold" aria-hidden="true">
+            <video
+              class="threshold__bg threshold__bg--main"
+              src="/assets/00-threshold/bg.mp4"
+              width="1280"
+              height="720"
+              muted
+              playsinline
+              preload="auto"
+              fetchpriority="high"
+            ></video>
+            <!-- Picks up the instant bg--main ends, same pose it left off
+                 on (both shot in one continuous take) — a wipe of the fan
+                 across the lens that lands on black, closing this scene
+                 out. -->
+            <video
+              class="threshold__bg threshold__bg--wipe"
+              src="/assets/00-threshold/bg-wipe.mp4"
+              width="1280"
+              height="720"
+              muted
+              playsinline
+              preload="auto"
+            ></video>
+            <!-- A full-resolution still of the exact pose bg--main ends
+                 on and bg--wipe starts on (one continuous take — see the
+                 comment above). maybeStartPhase2 (scene-00-threshold.js)
+                 hard-cuts to this instead of bg--wipe's own (1280x720,
+                 visibly softer) first frame, so what sits on screen for
+                 however long it takes the visitor to start scrolling is
+                 the sharp photo. Comes down the instant the scroll
+                 actually starts moving bg--wipe's own currentTime off 0,
+                 uncovering the clip already a little into its scrub. -->
+            <img
+              class="threshold__bg-shot"
+              src="/assets/00-threshold/bg-first-shot.webp"
+              alt=""
+              width="1920"
+              height="1080"
+              aria-hidden="true"
+              decoding="async"
+            />
+            <img
+              class="threshold__door threshold__door--left"
+              src="/assets/00-threshold/door-left.webp"
+              alt=""
+              width="1376"
+              height="2562"
+              decoding="async"
+            />
+            <!-- The handle's grey base — always fully visible (no --fill
+                 mask applied), sitting under the gold layer below it in
+                 DOM order. Same silhouette as the gold handle, extracted
+                 from the same source file into its own grey-only SVG, so
+                 the gold genuinely reads as filling in over it rather
+                 than appearing out of nothing. -->
+            <img
+              class="threshold__handle-base threshold__handle-base--left"
+              src="/assets/00-threshold/handle-left-base.svg"
+              alt=""
+              width="1375"
+              height="2560"
+              decoding="async"
+            />
+            <img
+              class="threshold__handle threshold__handle--left"
+              src="/assets/00-threshold/handle-left.svg"
+              alt=""
+              width="1375"
+              height="2560"
+              decoding="async"
+            />
+            <img
+              class="threshold__door threshold__door--right"
+              src="/assets/00-threshold/door-right.webp"
+              alt=""
+              width="1375"
+              height="2560"
+              decoding="async"
+            />
+            <img
+              class="threshold__handle-base threshold__handle-base--right"
+              src="/assets/00-threshold/handle-right-base.svg"
+              alt=""
+              width="1375"
+              height="2560"
+              decoding="async"
+            />
+            <img
+              class="threshold__handle threshold__handle--right"
+              src="/assets/00-threshold/handle-right.svg"
+              alt=""
+              width="1375"
+              height="2560"
+              decoding="async"
+            />
+          </div>
+
+          <div class="scene__scrim"></div>
+
+          <div class="scene__copy">
+            <p class="display">
+              <span class="display__line">Not every door leads to a place.</span>
+              <span class="display__line">Some lead to a story.</span>
+            </p>
+          </div>
+
+          <div class="scroll-prompt">
+            <span class="scroll-prompt__rule"></span>
+            <span class="scroll-prompt__label">Scroll to enter</span>
+          </div>
+
+          <!-- The title card — phase 3, picking up right where the wipe
+               clip's own scrub leaves off, same scroll-scrubbed mechanism
+               (see WIPE_FRACTION/TITLE_FRACTION in scene-00-threshold.js),
+               so it's as reversible as the wipe clip is: scroll back up
+               and the title card un-reveals straight back into her still
+               frame.
+               A sibling of .threshold (not nested inside it) specifically
+               so it stacks above everything else in this scene — the
+               door artwork, the copy above, the scrim, the prompt —
+               without needing to separately hide each of those first.
+               Hidden until scrolled into (opacity:0 in CSS); fades in,
+               reveals its text, then zooms toward the viewer — gradient,
+               trees, birds and each title line all with the same scale/
+               duration/ease, only their start times offset from one
+               another (paired front-to-back: gradient+eyebrow, trees+
+               line one 0.15s later, birds+line two a further 0.35s after
+               that — its own distinct beat, not the same gap repeated) —
+               while the text un-reveals the same way it arrived, in
+               reverse. trees drift left and birds drift right as they
+               zoom (xPercent alongside the scale, each continuing the
+               direction its own side of the frame implies) so it reads
+               as passing the viewer on either side, not rushing straight
+               at them; gradient and text stay put, scale/mask only.
+               trees/birds also pick up a motion-blur-and-dim as they go
+               (gradient stays crisp — the "world", not something rushing
+               past); .title-card__vignette sweeps to black in the final
+               beat, the moment of actually crossing through rather than
+               the zoom just trailing off. -->
+          <div class="title-card" aria-hidden="true">
+            <div class="title-card__world">
+              <div class="title-card__gradient"></div>
+              <img
+                class="title-card__trees"
+                src="/assets/01-unknown/trees.webp"
+                alt=""
+                width="567"
+                height="683"
+                decoding="async"
+              />
+              <img
+                class="title-card__birds"
+                src="/assets/01-unknown/birds.webp"
+                alt=""
+                width="533"
+                height="623"
+                decoding="async"
+              />
+            </div>
+            <div class="title-card__copy">
+              <p class="title-card__eyebrow" data-reveal>from</p>
+              <p class="title-card__title">
+                <span class="title-card__title-line" data-reveal>The Heart</span>
+                <span class="title-card__title-line" data-reveal>Of Japan</span>
+              </p>
+            </div>
+            <div class="title-card__vignette" aria-hidden="true"></div>
+          </div>
+
+          <!-- The finale clip — phase 4, picking up right where the title
+               card's own scrub leaves off (see WIPE_FRACTION/
+               TITLE_FRACTION in scene-00-threshold.js), same
+               scroll-scrubbed mechanism as bgWipe/the title card: fully
+               reversible, no autoplay. Hidden until scrolled into
+               (opacity:0 in CSS) — by the time it's revealed, the title
+               card's vignette has already swept to black, so the cut
+               lands clean. A sibling of .title-card so it stacks above
+               it once revealed; z-index in scene-00.css is what puts it
+               on top of everything else in the scene. -->
+          <video
+            class="finale__video"
+            src="/assets/00-threshold/finale.mp4"
+            width="1280"
+            height="720"
+            muted
+            playsinline
+            preload="auto"
+            aria-hidden="true"
+          ></video>
+
+          <!-- Settles the bottom of the frame into a modest dim over the
+               finale clip's last couple of seconds (see
+               FINALE_DIM_START/FINALE_DIM_MAX in scene-00-threshold.js)
+               — a black gradient rising from the bottom edge as you
+               scroll, not a flat fade over the whole frame, so it reads
+               as the floor of the scene darkening rather than the
+               picture itself dimming evenly. Deliberately capped well
+               short of the top edge — her figure sits well up the frame
+               in the clip's closing moments, and the point is grounding
+               the shot into the footer below, not covering her. A
+               sibling painted after .finale__video so it sits on top of
+               it. -->
+          <div class="finale__dim" aria-hidden="true"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ──────────────────────────────── footer ───────────────────────────── -->
+    <!-- Phone/email/hours are placeholders (clearly marked, not invented
+         fake-but-plausible values) — drop the real ones in when you have
+         them. Address is what's already established elsewhere on the
+         site (meta description, title). -->
+    <footer class="site-footer" id="site-footer">
+      <div class="site-footer__columns">
+        <div class="site-footer__col">
+          <h3 class="site-footer__heading">Address</h3>
+          <p class="site-footer__text">
+            AKA Restaurant &amp; Lounge<br />
+            Mileo The Palm<br />
+            Dubai, UAE
+          </p>
+        </div>
+
+        <div class="site-footer__col">
+          <h3 class="site-footer__heading">Contact Us</h3>
+          <p class="site-footer__text">
+            Phone: <a href="#">add phone number</a><br />
+            Email: <a href="#">add email address</a>
+          </p>
+          <div class="site-footer__social" aria-label="Social links">
+            <a href="#" aria-label="Location">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+            </a>
+            <a href="#" aria-label="Email">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="5.5" width="18" height="13" rx="1.6"/><path d="m4 6.5 8 6.5 8-6.5"/></svg>
+            </a>
+            <a href="#" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.9" fill="currentColor" stroke="none"/></svg>
+            </a>
+            <a href="#" aria-label="Phone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.3 21 3 13.7 3 4.9c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1Z"/></svg>
+            </a>
+            <a href="#" aria-label="WhatsApp">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 21a9 9 0 1 0-7.8-4.5L3 21l4.6-1.2A9 9 0 0 0 12 21Z"/><path d="M8.5 9.3c.2-.7.7-.6 1.2-.6.2 0 .4 0 .5.4l.7 1.7c.1.2 0 .4-.1.6l-.5.6c-.1.2-.1.3 0 .5.4.7 1.5 1.8 2.6 2.2.2.1.3.1.5-.1l.6-.6c.2-.1.4-.2.6-.1l1.6.8c.2.1.3.3.3.5 0 .9-.7 1.6-1.5 1.7-1.9.2-4.3-.9-5.8-2.4-1.3-1.3-2.4-3.3-2.3-5Z" fill="currentColor" stroke="none"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="site-footer__col">
+          <h3 class="site-footer__heading">Hours</h3>
+          <p class="site-footer__text">
+            Sunday – Thursday: add hours<br />
+            Friday &amp; Saturday: add hours
+          </p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

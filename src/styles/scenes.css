@@ -1,0 +1,134 @@
+/* ── Shared scene shell ───────────────────────────────────────────────────── */
+
+.scene {
+  position: relative;
+  z-index: var(--z-scene);
+}
+
+/* The element GSAP pins. `svh` is the small viewport height: it ignores
+   Safari's collapsing toolbar, so a pinned panel never jumps on iOS. */
+.scene__pin {
+  position: relative;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  display: grid;
+  grid-template-areas: "stage";
+  place-items: end center;
+  isolation: isolate;
+}
+
+.scene__pin > * {
+  grid-area: stage;
+}
+
+/* Keeps copy legible over any image without dimming the whole frame. */
+.scene__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to top,
+      rgb(11 11 11 / 0.92) 0%,
+      rgb(11 11 11 / 0.72) 22%,
+      rgb(11 11 11 / 0.28) 46%,
+      rgb(11 11 11 / 0) 68%
+    );
+}
+
+.scene__copy {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: 46rem;
+  margin-inline: auto;
+  padding: 0 var(--gutter)
+    clamp(7rem, 4.5rem + 12vh, 13rem);
+  text-align: center;
+}
+
+/* lines of copy ─────────────────────────────────────────────────────────── */
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--step-display);
+  line-height: 1.22;
+  letter-spacing: 0.005em;
+  text-wrap: balance;
+  color: var(--ivory);
+  text-shadow: 0 1px 24px rgb(11 11 11 / 0.65);
+}
+
+.display__line {
+  display: block;
+}
+
+.display__line + .display__line {
+  margin-top: 0.15em;
+}
+
+/* scroll prompt ─────────────────────────────────────────────────────────── */
+
+.scroll-prompt {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  padding-bottom: calc(clamp(1.5rem, 1rem + 2vh, 2.75rem) + var(--safe-bottom));
+  font-size: var(--step-ui);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+  transition: opacity 0.5s var(--ease-out);
+}
+
+/* On phones the reserve CTA owns the bottom edge; lift the prompt clear. */
+@media (max-width: 47.99em) {
+  .scroll-prompt {
+    padding-bottom: calc(5.5rem + var(--safe-bottom));
+  }
+}
+
+.scroll-prompt__rule {
+  width: 1px;
+  height: clamp(2rem, 4vh, 3.25rem);
+  background: linear-gradient(to bottom, var(--gold-glow), transparent);
+}
+
+/* Set on <body> by main.js the moment the page is scrolled. */
+body.has-scrolled .scroll-prompt {
+  opacity: 0;
+}
+
+/* placeholders for 01–07 ────────────────────────────────────────────────── */
+
+.scene--placeholder .scene__pin {
+  place-items: center;
+  border-top: 1px solid rgb(237 230 218 / 0.07);
+  background: var(--black);
+}
+
+.placeholder {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  text-align: center;
+}
+
+.placeholder__num {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+}
+
+.placeholder__name {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 1.1rem + 2vw, 2.6rem);
+  letter-spacing: 0.04em;
+  color: var(--ivory-faint);
+}

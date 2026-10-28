@@ -1,0 +1,123 @@
+/* ── Persistent chrome: brand, primary nav, reserve CTA ──────────────────
+   The bar itself starts hidden — scene 00 reveals it (see
+   scene-00-threshold.js) once you've crossed the threshold, rather than
+   having it sit over the closed door from the first frame. `visibility`
+   rides along with `opacity` so the nav can't be focused or clicked while
+   invisible; GSAP's `autoAlpha` is what animates both together. */
+
+.chrome {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: var(--z-chrome);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: var(--gutter);
+  padding-top: max(var(--gutter), env(safe-area-inset-top, 0px));
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.chrome > * {
+  pointer-events: auto;
+}
+
+/* brand ─────────────────────────────────────────────────────────────────── */
+
+.brand {
+  display: grid;
+  gap: 0.35em;
+  line-height: 1;
+  justify-self: start;
+}
+
+.brand__mark {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 1.15rem + 1.1vw, 2rem);
+  letter-spacing: 0.3em;
+  color: var(--ivory);
+}
+
+.brand__sub {
+  font-size: 0.56rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ivory-dim);
+}
+
+/* primary nav ───────────────────────────────────────────────────────────── */
+
+/* Sits in the grid's middle column, which the two equal 1fr side columns
+   keep centred on the viewport regardless of how wide the brand or the
+   reserve button happen to be. Hidden below 64em: five labels alongside
+   the brand and the reserve button get cramped before then, and this
+   build has no mobile menu (hamburger) yet to collapse into — revisit
+   when real site navigation, not just the scroll-story, gets built out. */
+.primary-nav {
+  display: none;
+}
+
+@media (min-width: 64em) {
+  .primary-nav {
+    display: block;
+  }
+}
+
+.primary-nav__list {
+  display: flex;
+  gap: clamp(1.4rem, 1rem + 1.4vw, 2.4rem);
+}
+
+.primary-nav a {
+  display: inline-block;
+  padding: 0.3em 0;
+  font-size: var(--step-ui);
+  letter-spacing: 0.02em;
+  color: rgb(237 230 218 / 0.82);
+  transition: color var(--dur) var(--ease-out);
+}
+
+.primary-nav a:hover,
+.primary-nav a:focus-visible {
+  color: var(--gold);
+}
+
+/* reserve ───────────────────────────────────────────────────────────────── */
+
+.reserve {
+  position: relative;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85em 1.5em;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--ivory);
+  transition: background var(--dur) var(--ease-out);
+}
+
+.reserve:hover,
+.reserve:focus-visible {
+  background: var(--gold);
+}
+
+/* On phones the CTA leaves the header and docks to the bottom edge. */
+@media (max-width: 47.99em) {
+  .reserve {
+    position: fixed;
+    inset: auto var(--gutter) calc(var(--gutter) + var(--safe-bottom)) var(--gutter);
+    z-index: var(--z-chrome);
+    padding: 1.05em 1.4em;
+  }
+
+  .reserve:active {
+    background: var(--gold);
+  }
+}
+
