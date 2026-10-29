@@ -72,3 +72,23 @@ export function whenMediaReady(media, timeoutMs = 4000) {
     ),
   );
 }
+
+/**
+ * A <video> that's only ever driven by setting `currentTime` directly
+ * (scroll-scrubbed, never `.play()`-ed for real) never paints a frame on
+ * iOS Safari until it has actually decoded at least one frame through real
+ * playback — seeking alone leaves it on a blank/black frame indefinitely,
+ * no matter how far currentTime moves. Desktop browsers don't have this
+ * restriction, which is why a scrub-only video can work perfectly there and
+ * show nothing at all on an iPhone.
+ *
+ * Silently starts and immediately stops playback to "prime" the decoder.
+ * Muted + playsinline (required on both elements already) is what makes
+ * this allowed without a user gesture. Safe to call as soon as the element
+ * exists — play() queues until there's enough data to actually start, then
+ * resolves and this pauses it right back on that first decoded frame.
+ */
+export function primeForScrubbing(video) {
+  if (!video || typeof video.play !== "function") return;
+  video.play().then(() => video.pause()).catch(() => {});
+}

@@ -48,7 +48,7 @@
    its own dedicated zone despite sharing the underlying pin throughout. */
 
 import { gsap, ScrollTrigger, mm, MOTION_OK, MOTION_REDUCED } from "../lib/motion.js";
-import { flagMissingAssets, whenMediaReady } from "../lib/assets.js";
+import { flagMissingAssets, whenMediaReady, primeForScrubbing } from "../lib/assets.js";
 
 /** How far past the top of the scene the pin holds, as a share of viewport.
     Covers all four phases: generous room for phase 1's ~8–9s automatic
@@ -158,6 +158,15 @@ export function initThreshold(section) {
   if (!pin || !doorLeft || !doorRight) return;
 
   flagMissingAssets(section);
+
+  /* bgWipe and finaleVideo are scrubbed purely via currentTime (see
+     onUpdate below) and never played for real — on iOS Safari that leaves
+     them stuck on a blank frame forever, no matter how far scroll moves,
+     unless the decoder has actually started once. Prime both immediately,
+     well before phase 1 even finishes, so they're ready the instant the
+     scrub takes over. */
+  primeForScrubbing(bgWipe);
+  primeForScrubbing(finaleVideo);
 
   /* ── full motion ──────────────────────────────────────────────────────── */
   mm.add(MOTION_OK, () => {
