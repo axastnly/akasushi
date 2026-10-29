@@ -49,6 +49,16 @@
 
 import { gsap, ScrollTrigger, mm, MOTION_OK, MOTION_REDUCED } from "../lib/motion.js";
 import { flagMissingAssets, whenMediaReady, primeForScrubbing } from "../lib/assets.js";
+import { IS_MOBILE_RUNTIME, FrameSequencePlayer } from "../lib/frameSequence.js";
+
+/* Frame counts the mobile canvas players need — these are a property of
+   the committed assets under public/assets/00-threshold/frames/, produced
+   by `npm run frames:build` (scripts/extract-frames.mjs). Update these two
+   numbers if the source footage is ever re-extracted and the frame count
+   changes. */
+const WIPE_FRAME_COUNT = 31;
+const FINALE_FRAME_COUNT = 301;
+const FRAME_BASE = `${import.meta.env.BASE_URL}assets/00-threshold/frames`;
 
 /** How far past the top of the scene the pin holds, as a share of viewport.
     Covers all four phases: generous room for phase 1's ~8–9s automatic
@@ -134,6 +144,7 @@ export function initThreshold(section) {
   const bg = q(".threshold__bg--main")[0];
   const bgShot = q(".threshold__bg-shot")[0];
   const bgWipe = q(".threshold__bg--wipe")[0];
+  const wipeCanvas = q(".threshold__bg--wipe-canvas")[0];
   const doorLeft = q(".threshold__door--left")[0];
   const doorRight = q(".threshold__door--right")[0];
   const handleLeft = q(".threshold__handle--left")[0];
@@ -150,6 +161,7 @@ export function initThreshold(section) {
   const titleCardVignette = q(".title-card__vignette")[0];
   const titleCardReveals = q("[data-reveal]");
   const finaleVideo = q(".finale__video")[0];
+  const finaleCanvas = q(".finale__canvas")[0];
   const finaleDim = q(".finale__dim")[0];
   /* Lives outside this section (it's the site-wide header), so it isn't
      reachable through `q`. */
@@ -159,14 +171,70 @@ export function initThreshold(section) {
 
   flagMissingAssets(section);
 
-  /* bgWipe and finaleVideo are scrubbed purely via currentTime (see
-     onUpdate below) and never played for real — on iOS Safari that leaves
-     them stuck on a blank frame forever, no matter how far scroll moves,
-     unless the decoder has actually started once. Prime both immediately,
-     well before phase 1 even finishes, so they're ready the instant the
-     scrub takes over. */
-  primeForScrubbing(bgWipe);
-  primeForScrubbing(finaleVideo);
+  /* Phase 2 (bgWipe) and phase 4 (finaleVideo) are scrubbed purely by
+     setting currentTime directly (see onUpdate below), never actually
+     played — iOS Safari won't paint a seeked frame on a video that's never
+     decoded through real playback, so on mobile they stay stuck blank no
+     matter how far scroll moves, even primed (see primeForScrubbing).
+     Mobile instead scrubs pre-extracted frames onto a <canvas> (see
+     frameSequence.js / scripts/extract-frames.mjs) — desktop's video scrub
+     already works, so it's untouched below. Only one of each pair ever
+     gets a real `src`/player, so the other's asset is never fetched. */
+  let wipePlayer = null;
+  let finalePlayer = null;
+
+  if (IS_MOBILE_RUNTIME) {
+    if (wipeCanvas) {
+      wipePlayer = new FrameSequencePlayer({
+        canvas: wipeCanvas,
+        basePath: `${FRAME_BASE}/wipe`,
+        frameCount: WIPE_FRAME_COUNT,
+      });
+      wipePlayer.loadFirstFrame();
+      // Small set (~1MB) — no reason to wait for "approaching", load it
+      // the same way desktop's preload="auto" would.
+      wipePlayer.startSequentialLoad();
+    }
+    if (finaleCanvas) {
+      finalePlayer = new FrameSequencePlayer({
+        canvas: finaleCanvas,
+        basePath: `${FRAME_BASE}/finale`,
+        frameCount: FINALE_FRAME_COUNT,
+      });
+      finalePlayer.loadFirstFrame();
+      // The big one (~9MB, 301 frames) — its own sequential load is
+      // kicked off later, from onUpdate, once scroll is actually
+      // approaching phase 4 (see WIPE_FRACTION crossing below).
+    }
+  } else {
+    // Desktop: nothing downloads until here — both tags ship with
+    // preload="none" and no `src` specifically so mobile never fetches
+    // them (see the HTML comments). Assign now, at the same point in
+    // boot desktop's fetch used to start.
+    if (bgWipe?.dataset.src) {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "video";
+      link.href = `${import.meta.env.BASE_URL}${bgWipe.dataset.src}`;
+      document.head.appendChild(link);
+      bgWipe.preload = "auto";
+      bgWipe.src = link.href;
+      bgWipe.load();
+    }
+    if (finaleVideo?.dataset.src) {
+      finaleVideo.preload = "auto";
+      finaleVideo.src = `${import.meta.env.BASE_URL}${finaleVideo.dataset.src}`;
+      finaleVideo.load();
+    }
+    primeForScrubbing(bgWipe);
+    primeForScrubbing(finaleVideo);
+  }
+
+  // Whichever element (video or canvas) is actually visible for each pair
+  // — this is what opacity/clearProps calls below target, so the right
+  // one animates regardless of which runtime path is active.
+  const wipeTarget = IS_MOBILE_RUNTIME ? wipeCanvas : bgWipe;
+  const finaleTarget = IS_MOBILE_RUNTIME ? finaleCanvas : finaleVideo;
 
   /* ── full motion ──────────────────────────────────────────────────────── */
   mm.add(MOTION_OK, () => {
@@ -276,7 +344,7 @@ export function initThreshold(section) {
 
       phase1Done = true;
       phase1EndProgress = st.progress;
-      if (bgWipe) gsap.set(bgWipe, { currentTime: 0 });
+      if (!IS_MOBILE_RUNTIME && bgWipe) gsap.set(bgWipe, { currentTime: 0 });
       /* bg dissolves into bg-shot (the high-res still), not a hard cut —
          bgWipe sits underneath both, primed at currentTime 0 but kept
          hidden (opacity held at 0, its CSS default) until the crossfade
@@ -298,7 +366,7 @@ export function initThreshold(section) {
           { opacity: 1, duration: handoffDuration, ease: "sine.inOut" },
         );
       }
-      if (bgWipe) gsap.set(bgWipe, { opacity: 1, delay: handoffDuration });
+      if (wipeTarget) gsap.set(wipeTarget, { opacity: 1, delay: handoffDuration });
       revealScrollPrompt();
     };
 
@@ -340,12 +408,26 @@ export function initThreshold(section) {
           window.scrollTo(0, self.start + PHASE1_SCROLL_CAP * (self.end - self.start));
         }
 
-        if (!phase1Done || !bgWipe) return;
+        if (!phase1Done || !wipeTarget) return;
         const remaining = 1 - phase1EndProgress;
         const rawProgress = remaining > 0 ? (self.progress - phase1EndProgress) / remaining : 1;
 
         const wipeProgress = gsap.utils.clamp(0, 1, rawProgress / WIPE_FRACTION);
-        bgWipe.currentTime = wipeProgress * bgWipe.duration;
+        if (IS_MOBILE_RUNTIME) {
+          wipePlayer?.setProgress(wipeProgress);
+        } else {
+          bgWipe.currentTime = wipeProgress * bgWipe.duration;
+        }
+
+        /* Finale is the big one (301 frames, ~9MB) — not worth fetching
+           before scroll is genuinely headed its way. Starting the
+           sequential load as phase 3 (the title card) begins gives it
+           that whole phase as lead time before phase 4 actually needs a
+           frame. Idempotent — startSequentialLoad only actually starts
+           once, so calling it every tick here is harmless. */
+        if (IS_MOBILE_RUNTIME && finalePlayer && rawProgress >= WIPE_FRACTION) {
+          finalePlayer.startSequentialLoad();
+        }
 
         /* bg-shot crossfades against bgWipe over the first sliver of
            wipeProgress (BG_SHOT_FADE_FRACTION) — continuously driven off
@@ -367,7 +449,7 @@ export function initThreshold(section) {
           titleCardTl.progress(titleProgress);
         }
 
-        if (finaleVideo) {
+        if (finaleTarget) {
           const finaleFraction = 1 - WIPE_FRACTION - TITLE_FRACTION;
           const finaleRaw = (rawProgress - WIPE_FRACTION - TITLE_FRACTION) / finaleFraction;
           const finaleActive = finaleRaw > 0;
@@ -381,11 +463,16 @@ export function initThreshold(section) {
              bg's hard .set in phase 1. */
           if (finaleActive !== finaleVisible) {
             finaleVisible = finaleActive;
-            gsap.set(finaleVideo, { opacity: finaleActive ? 1 : 0 });
+            gsap.set(finaleTarget, { opacity: finaleActive ? 1 : 0 });
           }
-          if (finaleActive && finaleVideo.duration) {
+          const canScrub = IS_MOBILE_RUNTIME ? !!finalePlayer : !!finaleVideo.duration;
+          if (finaleActive && canScrub) {
             const finaleProgress = gsap.utils.clamp(0, 1, finaleRaw);
-            finaleVideo.currentTime = finaleProgress * finaleVideo.duration;
+            if (IS_MOBILE_RUNTIME) {
+              finalePlayer.setProgress(finaleProgress);
+            } else {
+              finaleVideo.currentTime = finaleProgress * finaleVideo.duration;
+            }
 
             /* The bottom-up dim — see FINALE_DIM_START/FINALE_DIM_MAX
                above and .finale__dim in scene-00.css. Scrubbed the same
@@ -414,8 +501,14 @@ export function initThreshold(section) {
     /* Gated on the artwork having actually finished loading (not just the
        script having run) — door-left.png alone is the better part of a
        megabyte, and starting the reveal before it's actually there would
-       show it popping in mid-sequence instead of fading in deliberately. */
-    whenMediaReady([bg, bgShot, bgWipe, doorLeft, doorRight, handleLeft, handleRight]).then(() => {
+       show it popping in mid-sequence instead of fading in deliberately.
+       bgWipe only goes in this list on desktop — on mobile it has no src
+       at all (the canvas replaces it), so readyState would never advance
+       and this would just burn its full 4s timeout for nothing every
+       time. */
+    const introMedia = [bg, bgShot, doorLeft, doorRight, handleLeft, handleRight];
+    if (!IS_MOBILE_RUNTIME) introMedia.push(bgWipe);
+    whenMediaReady(introMedia).then(() => {
       if (cancelled) return;
 
       seq = gsap.timeline({ defaults: { ease: "none" }, onComplete: maybeStartPhase2 });
@@ -529,6 +622,10 @@ export function initThreshold(section) {
         finaleVideo.pause();
         gsap.set(finaleVideo, { clearProps: "all" });
       }
+      wipePlayer?.destroy();
+      finalePlayer?.destroy();
+      if (wipeCanvas) gsap.set(wipeCanvas, { clearProps: "all" });
+      if (finaleCanvas) gsap.set(finaleCanvas, { clearProps: "all" });
       if (finaleDim) gsap.set(finaleDim, { clearProps: "all" });
       gsap.set([copy, lines, bg, doorLeft, doorRight], { clearProps: "all" });
       if (bgShot) gsap.set(bgShot, { clearProps: "all" });

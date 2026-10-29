@@ -438,6 +438,41 @@
   opacity: 0;
 }
 
+/* Mirrors .finale__video above — mobile's canvas replacement (see
+   frameSequence.js). object-fit doesn't apply to <canvas>; the player
+   itself does the equivalent cover-and-center math when it draws each
+   frame, sized to this box via devicePixelRatio. */
+.finale__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+/* ── video vs. canvas: mobile/desktop swap ────────────────────────────────
+   Exactly one of each pair is ever used — see IS_MOBILE_RUNTIME in
+   frameSequence.js, which sets this class on <html> before scene setup
+   runs. Both default to hidden so there's no flash of the wrong one before
+   that class lands; the unused element of each pair also never gets a
+   `src` (see scene-00-threshold.js), so this is purely a paint/layout
+   concern, not a double-download one. */
+.threshold__bg--wipe-canvas,
+.finale__canvas {
+  display: none;
+}
+
+.use-frame-canvas .threshold__bg--wipe-canvas,
+.use-frame-canvas .finale__canvas {
+  display: block;
+}
+
+.use-frame-canvas .threshold__bg--wipe,
+.use-frame-canvas .finale__video {
+  display: none;
+}
+
 /* --dim (0–100, driven by FINALE_DIM_START in scene-00-threshold.js) is
    how far up the frame the darkness has climbed. At 0 the gradient's
    black-to-transparent span collapses to nothing right at the bottom

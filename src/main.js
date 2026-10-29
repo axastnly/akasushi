@@ -3,26 +3,6 @@ import "./styles/main.css";
 import { startSmoothScroll, refreshWhenSettled, trackScrollState } from "./lib/motion.js";
 import { scenes } from "./scenes/index.js";
 
-/* TEMPORARY — on-screen error display for diagnosing the mobile freeze.
-   Mobile Safari gives no console without a cable + a Mac; this makes any
-   crash visible directly on the phone's screen instead. Remove once the
-   root cause is found. */
-function showFatalError(message) {
-  const el = document.createElement("div");
-  el.style.cssText =
-    "position:fixed;inset:0;z-index:999999;background:#200;color:#fff;" +
-    "font:13px/1.4 monospace;padding:1rem;overflow:auto;white-space:pre-wrap;" +
-    "border:4px solid red;";
-  el.textContent = "SITE CRASHED:\n\n" + message;
-  document.body.appendChild(el);
-}
-window.addEventListener("error", (e) => {
-  showFatalError(`${e.message}\n${e.filename}:${e.lineno}:${e.colno}\n\n${e.error?.stack || ""}`);
-});
-window.addEventListener("unhandledrejection", (e) => {
-  showFatalError(`Unhandled promise rejection: ${e.reason?.message || e.reason}\n\n${e.reason?.stack || ""}`);
-});
-
 /* Chrome (and some others) restore the previous scroll position on a
    plain refresh by default — on a site this scroll-driven, reloading
    mid-scene lands with GSAP's ScrollTrigger still mid-setup fighting an
@@ -94,16 +74,6 @@ function boot() {
   });
 
   refreshWhenSettled();
-
-  // TEMPORARY — see showFatalError above. Confirms boot() actually ran
-  // to completion, so a frozen page with no badge means the script never
-  // got this far (as opposed to running fine and something else freezing).
-  const badge = document.createElement("div");
-  badge.textContent = `JS booted · ${sections.length} scene(s) · lenis:${!!lenis}`;
-  badge.style.cssText =
-    "position:fixed;bottom:4px;left:4px;z-index:999999;background:#0a0;" +
-    "color:#000;font:10px monospace;padding:2px 6px;border-radius:3px;";
-  document.body.appendChild(badge);
 }
 
 if (document.readyState === "loading") {

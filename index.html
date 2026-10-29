@@ -29,9 +29,13 @@
       crossorigin
     />
 
-    <!-- Scene 00 is the first paint: fetch its layers immediately, never lazily. -->
+    <!-- Scene 00 is the first paint: fetch its layers immediately, never lazily.
+         bg-wipe.mp4 is NOT preloaded here on purpose — it's desktop-only
+         (mobile scrubs extracted frames instead, see frameSequence.js) and
+         main.js injects its own preload link for it, but only once it's
+         confirmed this is the desktop path. A static tag here would have
+         every mobile visitor downloading a video they never use. -->
     <link rel="preload" as="video" href="/assets/00-threshold/bg.mp4" fetchpriority="high" />
-    <link rel="preload" as="video" href="/assets/00-threshold/bg-wipe.mp4" />
     <link rel="preload" as="image" href="/assets/00-threshold/door-left.webp" />
     <link rel="preload" as="image" href="/assets/00-threshold/door-right.webp" />
 
@@ -94,16 +98,29 @@
             <!-- Picks up the instant bg--main ends, same pose it left off
                  on (both shot in one continuous take) — a wipe of the fan
                  across the lens that lands on black, closing this scene
-                 out. -->
+                 out. Desktop only — no `src` here on purpose, so nothing
+                 downloads until scene-00-threshold.js assigns it for the
+                 desktop (non-mobile) path; see .threshold__bg--wipe-canvas
+                 below for mobile's replacement. -->
             <video
               class="threshold__bg threshold__bg--wipe"
-              src="/assets/00-threshold/bg-wipe.mp4"
+              data-src="assets/00-threshold/bg-wipe.mp4"
               width="1280"
               height="720"
               muted
               playsinline
-              preload="auto"
+              preload="none"
             ></video>
+            <!-- Mobile's replacement for bg--wipe above — iOS Safari won't
+                 paint a currentTime seek on a video that's never actually
+                 played, so mobile scrubs pre-extracted frames onto this
+                 canvas instead (src/lib/frameSequence.js). Only one of the
+                 two is ever shown — CSS picks based on the runtime class
+                 main.js sets on <html>. -->
+            <canvas
+              class="threshold__bg threshold__bg--wipe-canvas"
+              aria-hidden="true"
+            ></canvas>
             <!-- A full-resolution still of the exact pose bg--main ends
                  on and bg--wipe starts on (one continuous take — see the
                  comment above). maybeStartPhase2 (scene-00-threshold.js)
@@ -260,16 +277,23 @@
                lands clean. A sibling of .title-card so it stacks above
                it once revealed; z-index in scene-00.css is what puts it
                on top of everything else in the scene. -->
+          <!-- Desktop only — no `src`, nothing downloads until
+               scene-00-threshold.js assigns it for the desktop path; see
+               .finale__canvas below for mobile's replacement. -->
           <video
             class="finale__video"
-            src="/assets/00-threshold/finale.mp4"
+            data-src="assets/00-threshold/finale.mp4"
             width="1280"
             height="720"
             muted
             playsinline
-            preload="auto"
+            preload="none"
             aria-hidden="true"
           ></video>
+          <!-- Mobile's replacement for finale__video above — same reasoning
+               as .threshold__bg--wipe-canvas further up: scroll-scrubbed
+               via pre-extracted frames instead of video currentTime. -->
+          <canvas class="finale__canvas" aria-hidden="true"></canvas>
 
           <!-- Settles the bottom of the frame into a modest dim over the
                finale clip's last couple of seconds (see

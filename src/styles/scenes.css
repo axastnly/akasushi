@@ -5,8 +5,16 @@
   z-index: var(--z-scene);
 }
 
-/* The element GSAP pins. `svh` is the small viewport height: it ignores
-   Safari's collapsing toolbar, so a pinned panel never jumps on iOS. */
+/* The element GSAP pins. `svh` (small viewport height) is deliberately used
+   over `dvh` (dynamic viewport height) here, not just `vh`: svh is a fixed
+   value that ignores Safari's collapsing toolbar entirely, while dvh
+   actively tracks it and would change mid-scroll — reintroducing exactly
+   the jump ScrollTrigger.config({ ignoreMobileResize: true }) (motion.js)
+   is there to prevent. (No `position: sticky` exists anywhere in this
+   codebase — pinning is GSAP's own JS-driven `fixed`, so the usual
+   sticky-breaks-under-an-overflow:hidden-ancestor footgun doesn't apply
+   here; this element's own `overflow: hidden` just clips its layered
+   media.) */
 .scene__pin {
   position: relative;
   height: 100vh;
