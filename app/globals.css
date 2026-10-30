@@ -350,6 +350,21 @@ ul {
 .threshold__bg {
   scale: 1.04;
 }
+/* bg--main (the phase-1 intro clip) was reshot as a different take than
+   bg-wipe.mp4 (phase 2) — the two used to be one continuous take with a
+   seamless handoff; this take sits a notch higher in frame at its last
+   moment than bg-wipe's first frame, so the cut visibly jumps. Measured
+   the actual offset via cross-correlation on the two clips' handoff
+   frames (not eyeballed): 12px of 720 = 1.667%, bg--main needs to shift
+   DOWN to match. A plain `translate` (not object-position) on purpose —
+   object-position's effect depends on how much object-fit:cover has to
+   crop, which varies with viewport aspect ratio, so the same value reads
+   as a different amount of shift (or none at all) at different window
+   sizes; a translate moves the already-cropped box by a fixed fraction
+   of its own height regardless. Re-measure if the footage changes. */
+.threshold__bg--main {
+  translate: 0 1.667%;
+}
 .threshold__bg-shot {
   z-index: 1;
   pointer-events: none;
