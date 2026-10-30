@@ -363,6 +363,13 @@ ul {
    sizes; a translate moves the already-cropped box by a fixed fraction
    of its own height regardless. Re-measure if the footage changes. */
 .threshold__bg--main {
+  /* Needs to sit above bg-shot (z-index: 1) during the phase-1 handoff:
+     bg-shot now jumps straight to full opacity (no fade-in of its own)
+     and bg--main is what fades out on top of it. If bg--main had no
+     z-index, bg-shot's explicit z-index would still place it above an
+     auto-stacked sibling, hiding bg--main's fade-out completely behind
+     an already-opaque layer — reads as an instant cut, not a fade. */
+  z-index: 2;
   translate: 0 1.667%;
 }
 .threshold__bg-shot {

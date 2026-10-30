@@ -27,6 +27,12 @@ const FINALE_DIM_START = 0.92;
 const FINALE_DIM_MAX = 35;
 const PHASE1_SCROLL_CAP = 0.1;
 const PACE = 1.4;
+// Real-time length of the phase-1 -> phase-2 handoff fade (bg--main fading
+// out to reveal bgShot underneath). Scroll-driven, not time-driven, but the
+// handoff itself runs on a clock so bgShot must stay locked at full opacity
+// for this long regardless of how fast the user keeps scrolling — see the
+// phase1EndTime gate in the ScrollTrigger onUpdate handler below.
+const HANDOFF_DURATION = 1.6 * PACE;
 
 /* Frame-rate-independent exponential lerp — smooths the discrete frame
    picks WebCodecs scrubbing produces (same reasoning as the AVIF
@@ -109,6 +115,7 @@ export default function ThresholdScene() {
       let cancelled = false;
       let phase1Done = false;
       let phase1EndProgress = 0;
+      let phase1EndTime = 0;
       let finaleVisible = false;
       let smoothedWipeProgress = 0;
       let smoothedFinaleProgress = 0;
@@ -146,13 +153,13 @@ export default function ThresholdScene() {
 
         phase1Done = true;
         phase1EndProgress = st.progress;
+        phase1EndTime = performance.now();
         // bg--main fades out; bgShot just sits at full opacity underneath
         // it the whole time (no fade-in of its own), so fading bg out is
         // what reveals it — a fade-out only, not a crossfade.
-        const handoffDuration = 1.6 * PACE;
-        gsap.to(bg, { opacity: 0, duration: handoffDuration, ease: "sine.inOut" });
+        gsap.to(bg, { opacity: 0, duration: HANDOFF_DURATION, ease: "sine.inOut" });
         if (bgShot) gsap.set(bgShot, { opacity: 1 });
-        if (wipeCanvas) gsap.set(wipeCanvas, { opacity: 1, delay: handoffDuration });
+        if (wipeCanvas) gsap.set(wipeCanvas, { opacity: 1, delay: HANDOFF_DURATION });
       };
 
       const st = ScrollTrigger.create({
@@ -176,7 +183,13 @@ export default function ThresholdScene() {
           smoothedWipeProgress = smoothProgress(smoothedWipeProgress, wipeProgress);
           wipePlayer?.seekToProgress(smoothedWipeProgress);
 
-          if (bgShot) {
+          // Scroll can keep advancing wipeProgress during the handoff fade
+          // (users don't pause while bg--main fades out), and
+          // BG_SHOT_FADE_FRACTION is a narrow window — without this gate,
+          // bgShot would already be fading back out before bg--main had
+          // finished revealing it, hiding the fade almost entirely. Hold
+          // bgShot at full opacity until the time-based handoff is done.
+          if (bgShot && performance.now() - phase1EndTime >= HANDOFF_DURATION * 1000) {
             const shotOpacity = 1 - gsap.utils.clamp(0, 1, wipeProgress / BG_SHOT_FADE_FRACTION);
             gsap.set(bgShot, { opacity: shotOpacity });
           }
