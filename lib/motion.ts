@@ -23,6 +23,18 @@ export const mm = gsap.matchMedia();
 export const MOTION_OK = "(prefers-reduced-motion: no-preference)";
 export const MOTION_REDUCED = "(prefers-reduced-motion: reduce)";
 
+let activeLenis: Lenis | null = null;
+// The footer lives inside the pinned threshold scene now (see
+// ThresholdScene.tsx), so its on-page position only exists at the end of
+// that scene's GSAP-driven scroll-jacked timeline — a plain anchor jump
+// (native, or Lenis's own `anchors` handling) resolves against normal
+// static layout and would land near the top of the pin instead. Anything
+// that needs to "skip to the footer" has to scroll the real scroller
+// (Lenis) to that ScrollTrigger's own `end` pixel value instead.
+export function getLenis(): Lenis | null {
+  return activeLenis;
+}
+
 export function startSmoothScroll(): Lenis | null {
   if (typeof window === "undefined") return null;
   if (window.matchMedia(MOTION_REDUCED).matches) return null;
@@ -32,13 +44,13 @@ export function startSmoothScroll(): Lenis | null {
     wheelMultiplier: 1.2,
     smoothWheel: true,
     syncTouch: false,
-    anchors: { offset: 0, duration: 1.2 },
   });
 
   lenis.on("scroll", ScrollTrigger.update);
   gsap.ticker.add((time) => lenis.raf(time * 1000));
   gsap.ticker.lagSmoothing(0);
 
+  activeLenis = lenis;
   return lenis;
 }
 

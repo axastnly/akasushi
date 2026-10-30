@@ -8,10 +8,12 @@ import {
   mm,
   MOTION_OK,
   MOTION_REDUCED,
+  getLenis,
 } from "@/lib/motion";
 import { WebCodecsPlayer } from "@/lib/webcodecsPlayer";
 import { asset } from "@/lib/paths";
 import Button from "./Button";
+import Footer from "./Footer";
 
 /* Ported from the Vite site's scene-00-threshold.js — same four-phase
    choreography (auto intro → wipe scrub → title card → finale scrub),
@@ -25,6 +27,14 @@ const TITLE_FRACTION = 0.22;
 const BG_SHOT_FADE_FRACTION = 0.04;
 const FINALE_DIM_START = 0.92;
 const FINALE_DIM_MAX = 35;
+// The footer lives inside the pinned stage itself (not after it in normal
+// flow — a trailing, overlapping footer there needs at least one full
+// viewport of scrollable content after the pin to ever let it release,
+// which an overlapping/shortened footer can't guarantee). It's revealed
+// as an overlay over the still-full-frame, still-fixed finale canvas
+// during this last stretch of finale progress, then both settle into a
+// normal static block together once the pin naturally unpins.
+const FOOTER_REVEAL_START = 0.78;
 const PHASE1_SCROLL_CAP = 0.1;
 const PACE = 1.4;
 // Real-time length of the phase-1 -> phase-2 handoff fade (bg--main fading
@@ -72,6 +82,7 @@ export default function ThresholdScene() {
   const titleLine2Ref = useRef<HTMLSpanElement>(null);
   const finaleCanvasRef = useRef<HTMLCanvasElement>(null);
   const finaleDimRef = useRef<HTMLDivElement>(null);
+  const footerOverlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     ensureGsapRegistered();
@@ -124,6 +135,7 @@ export default function ThresholdScene() {
     ) as HTMLElement[];
     const finaleCanvas = finaleCanvasRef.current;
     const finaleDim = finaleDimRef.current;
+    const footerOverlay = footerOverlayRef.current;
     const chrome = document.querySelector(".chrome");
 
     const wipePlayer = wipeCanvas ? new WebCodecsPlayer(wipeCanvas, asset("/assets/00-threshold/bg-wipe.mp4")) : null;
@@ -241,12 +253,42 @@ export default function ThresholdScene() {
                 const dimProgress = gsap.utils.clamp(0, 1, (finaleProgress - FINALE_DIM_START) / (1 - FINALE_DIM_START));
                 gsap.set(finaleDim, { "--dim": dimProgress * FINALE_DIM_MAX });
               }
+
+              if (footerOverlay) {
+                const footerReveal = gsap.utils.clamp(
+                  0,
+                  1,
+                  (finaleProgress - FOOTER_REVEAL_START) / (1 - FOOTER_REVEAL_START),
+                );
+                gsap.set(footerOverlay, {
+                  opacity: footerReveal,
+                  y: (1 - footerReveal) * 40,
+                  pointerEvents: footerReveal > 0.5 ? "auto" : "none",
+                });
+              }
             }
           }
         },
       });
 
       bg.addEventListener("ended", maybeStartPhase2, { once: true });
+
+      // The footer's real on-page position only exists at the end of this
+      // pin's scroll-jacked timeline — see the comment on getLenis() for
+      // why a plain anchor jump can't reach it. Scroll the real scroller
+      // there directly instead.
+      const skipLink = document.querySelector(".skip-link");
+      const onSkip = (e: Event) => {
+        e.preventDefault();
+        getLenis()?.scrollTo(st.end, { immediate: true });
+        // The footer's reveal is normally gated on phase1Done inside
+        // onUpdate — if this is clicked before the intro naturally
+        // finishes (the whole point of a skip link), that gate would
+        // never have opened yet, leaving the footer at the right scroll
+        // position but still invisible. Force it directly instead.
+        if (footerOverlay) gsap.set(footerOverlay, { opacity: 1, y: 0, pointerEvents: "auto" });
+      };
+      skipLink?.addEventListener("click", onSkip);
 
       function whenMediaReady(media: Array<HTMLImageElement | HTMLVideoElement | null>, timeoutMs = 4000) {
         return Promise.all(
@@ -330,12 +372,14 @@ export default function ThresholdScene() {
         seq?.kill();
         titleCardTl?.kill();
         bg.removeEventListener("ended", maybeStartPhase2);
+        skipLink?.removeEventListener("click", onSkip);
         bg.pause();
         wipePlayer?.destroy();
         finalePlayer?.destroy();
         if (wipeCanvas) gsap.set(wipeCanvas, { clearProps: "all" });
         if (finaleCanvas) gsap.set(finaleCanvas, { clearProps: "all" });
         if (finaleDim) gsap.set(finaleDim, { clearProps: "all" });
+        if (footerOverlay) gsap.set(footerOverlay, { clearProps: "all" });
         gsap.set([copy, lines, ctaGroup, bg, doorLeft, doorRight].filter(Boolean) as HTMLElement[], { clearProps: "all" });
         if (bgShot) gsap.set(bgShot, { clearProps: "all" });
         if (chrome) gsap.set(chrome, { clearProps: "all" });
@@ -537,6 +581,10 @@ export default function ThresholdScene() {
 
         <canvas ref={finaleCanvasRef} className="finale__canvas" aria-hidden="true" />
         <div className="finale__dim" ref={finaleDimRef} aria-hidden="true" />
+
+        <div className="finale__footer-overlay" ref={footerOverlayRef}>
+          <Footer />
+        </div>
       </div>
     </section>
   );

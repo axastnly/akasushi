@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import Chrome from "@/components/Chrome";
-import Footer from "@/components/Footer";
 import ThresholdScene from "@/components/ThresholdScene";
 import { startSmoothScroll, refreshWhenSettled, trackScrollState } from "@/lib/motion";
 
@@ -56,7 +55,6 @@ export default function Home() {
       <main>
         <ThresholdScene />
       </main>
-      <Footer />
     </>
   );
 }

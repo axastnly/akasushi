@@ -601,6 +601,18 @@ ul {
     rgb(0 0 0 / 0) calc(var(--dim) * 1%)
   );
 }
+/* Lives inside the pinned stage, overlaid on the still-full-frame finale
+   canvas during the last stretch of its scroll progress — see
+   FOOTER_REVEAL_START in ThresholdScene.tsx. Revealed by JS (opacity/y),
+   so it needs an explicit reduced-motion override below: without scroll-
+   driven reveal logic running, it would otherwise stay invisible and the
+   footer would be unreachable for reduced-motion users. */
+.finale__footer-overlay {
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  opacity: 0;
+}
 @media (prefers-reduced-motion: reduce) {
   .title-card {
     display: none;
@@ -608,6 +620,10 @@ ul {
   .finale__canvas,
   .finale__dim {
     display: none;
+  }
+  .finale__footer-overlay {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 
