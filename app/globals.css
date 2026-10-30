@@ -369,6 +369,14 @@ ul {
   z-index: 1;
   pointer-events: none;
   scale: 1;
+  /* bg-first-shot.webp is what's actually visible the instant bgWipe
+     hard-cuts in (gsap.set(..., {delay}) — not a fade), so IT'S the
+     element whose alignment against bg-wipe.mp4 actually matters for the
+     perceived cut, not bg--main's (which has already faded out by then).
+     Measured separately from bg--main's offset, same cross-correlation
+     method: -6px of 720 = 0.833%, smaller than bg--main's because this
+     bridge image apparently was never perfectly matched to begin with. */
+  translate: 0 0.833%;
 }
 .threshold__door,
 .threshold__handle,
