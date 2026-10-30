@@ -350,18 +350,22 @@ ul {
 .threshold__bg {
   scale: 1.04;
 }
-/* bg--main (the phase-1 intro clip) was reshot as a different take than
-   bg-wipe.mp4 (phase 2) — the two used to be one continuous take with a
-   seamless handoff; this take sits a notch higher in frame at its last
-   moment than bg-wipe's first frame, so the cut visibly jumps. Measured
-   the actual offset via cross-correlation on the two clips' handoff
-   frames (not eyeballed): 12px of 720 = 1.667%, bg--main needs to shift
-   DOWN to match. A plain `translate` (not object-position) on purpose —
-   object-position's effect depends on how much object-fit:cover has to
-   crop, which varies with viewport aspect ratio, so the same value reads
-   as a different amount of shift (or none at all) at different window
-   sizes; a translate moves the already-cropped box by a fixed fraction
-   of its own height regardless. Re-measure if the footage changes. */
+/* bg--main (the phase-1 intro clip, bg.mp4) needs to line up with
+   bg-first-shot.webp, since bg-shot is revealed underneath it as it
+   fades out — any mismatch reads as the image "jumping" at the handoff.
+   bg.mp4 has been re-shot/re-exported multiple times since this was
+   first calibrated, each one a different take with its own framing, so
+   this is NOT a one-time fix — re-measure whenever the footage changes.
+   Measured via direct simulation (not eyeballed): rendered bg-shot at
+   its own fixed translate (0.833%, scale 1) as the target, then searched
+   scale+translate combinations for bg--main minimizing pixel SSD against
+   it (brute-force grid search, refined in narrowing passes) — a plain
+   offset search alone (no scale) couldn't get a good match, confirming
+   this take is also a slightly different framing/crop, not just shifted.
+   Both `translate` (not object-position, viewport-independent) and
+   `scale` override the inherited .threshold__bg scale (1.04, tuned for
+   a now-superseded take) since they're calibrated as a pair against
+   bg-shot's own fixed values, not usable independently. */
 .threshold__bg--main {
   /* Needs to sit above bg-shot (z-index: 1) during the phase-1 handoff:
      bg-shot now jumps straight to full opacity (no fade-in of its own)
@@ -370,7 +374,8 @@ ul {
      auto-stacked sibling, hiding bg--main's fade-out completely behind
      an already-opaque layer — reads as an instant cut, not a fade. */
   z-index: 2;
-  translate: 0 1.667%;
+  scale: 1.012;
+  translate: 0 1.11%;
 }
 .threshold__bg-shot {
   z-index: 1;
