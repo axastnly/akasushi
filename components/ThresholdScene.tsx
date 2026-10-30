@@ -79,6 +79,31 @@ export default function ThresholdScene() {
     const pin = pinRef.current!;
     const bg = bgRef.current!;
     const bgShot = bgShotRef.current;
+
+    // iOS Low Power Mode silently blocks video.play() unless it's the
+    // direct, synchronous result of a user gesture — even for muted video.
+    // The real bg.play() call later happens async (inside a GSAP timeline
+    // callback), well outside any gesture, so on a Low Power Mode phone it
+    // gets rejected with no visible error (swallowed by .catch) and the
+    // video just never starts. Priming it — play() + immediate pause(),
+    // synchronously inside the first real touch/click/scroll — unlocks
+    // playback for the rest of the page's lifetime, so the later call
+    // succeeds. See lib/webcodecsPlayer.ts for the related (but distinct)
+    // "never actually played" seeking bug this doesn't fully overlap with.
+    let primed = false;
+    const primeVideo = () => {
+      if (primed) return;
+      primed = true;
+      bg.play()
+        .then(() => bg.pause())
+        .catch(() => {});
+      window.removeEventListener("touchstart", primeVideo);
+      window.removeEventListener("pointerdown", primeVideo);
+      window.removeEventListener("wheel", primeVideo);
+    };
+    window.addEventListener("touchstart", primeVideo, { passive: true });
+    window.addEventListener("pointerdown", primeVideo);
+    window.addEventListener("wheel", primeVideo, { passive: true });
     const wipeCanvas = wipeCanvasRef.current;
     const doorLeft = doorLeftRef.current!;
     const doorRight = doorRightRef.current!;
@@ -347,6 +372,9 @@ export default function ThresholdScene() {
 
     return () => {
       mmContext.revert();
+      window.removeEventListener("touchstart", primeVideo);
+      window.removeEventListener("pointerdown", primeVideo);
+      window.removeEventListener("wheel", primeVideo);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
