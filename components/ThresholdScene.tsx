@@ -146,11 +146,12 @@ export default function ThresholdScene() {
 
         phase1Done = true;
         phase1EndProgress = st.progress;
+        // bg--main fades out; bgShot just sits at full opacity underneath
+        // it the whole time (no fade-in of its own), so fading bg out is
+        // what reveals it — a fade-out only, not a crossfade.
         const handoffDuration = 1.6 * PACE;
         gsap.to(bg, { opacity: 0, duration: handoffDuration, ease: "sine.inOut" });
-        if (bgShot) {
-          gsap.fromTo(bgShot, { opacity: 0 }, { opacity: 1, duration: handoffDuration, ease: "sine.inOut" });
-        }
+        if (bgShot) gsap.set(bgShot, { opacity: 1 });
         if (wipeCanvas) gsap.set(wipeCanvas, { opacity: 1, delay: handoffDuration });
       };
 
