@@ -345,7 +345,7 @@ export default function ThresholdScene() {
         const doorOpenDuration = 1.8 * PACE;
 
         seq
-          .set(bg, { opacity: 1 }, doorOpenStart)
+          .fromTo(bg, { opacity: 0 }, { opacity: 1, duration: doorOpenDuration, ease: "power2.inOut" }, doorOpenStart)
           .call(
             () => {
               bg.currentTime = 0;
