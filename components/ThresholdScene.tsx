@@ -142,10 +142,14 @@ export default function ThresholdScene() {
     const footerOverlay = footerOverlayRef.current;
     const chrome = document.querySelector(".chrome");
 
+    // wipePlayer/finalePlayer fetch their whole source file up front
+    // (1.7MB and 8.5MB) — starting that immediately would compete for
+    // bandwidth with bg.mp4 right as it needs to buffer enough to play
+    // the intro smoothly. Neither is needed until well past phase 1, so
+    // their .load() calls are deferred until bg.mp4 itself is actually
+    // ready (see whenMediaReady below), not fired here at mount.
     const wipePlayer = wipeCanvas ? new WebCodecsPlayer(wipeCanvas, asset("/assets/00-threshold/bg-wipe.mp4")) : null;
     const finalePlayer = finaleCanvas ? new WebCodecsPlayer(finaleCanvas, asset("/assets/00-threshold/finale.mp4")) : null;
-    wipePlayer?.load();
-    finalePlayer?.load();
 
     const mmContext = mm.add(MOTION_OK, () => {
       if (copy) gsap.set(copy, { opacity: 1 });
@@ -294,15 +298,20 @@ export default function ThresholdScene() {
       };
       skipLink?.addEventListener("click", onSkip);
 
-      function whenMediaReady(media: Array<HTMLImageElement | HTMLVideoElement | null>, timeoutMs = 4000) {
+      function whenMediaReady(media: Array<HTMLImageElement | HTMLVideoElement | null>, timeoutMs = 8000) {
         return Promise.all(
           media.filter((el): el is HTMLImageElement | HTMLVideoElement => !!el).map(
             (el) =>
               new Promise<void>((resolve) => {
                 const isVideo = el.tagName === "VIDEO";
                 if (isVideo) {
-                  if ((el as HTMLVideoElement).readyState >= 2) return resolve();
-                  el.addEventListener("loadeddata", () => resolve(), { once: true });
+                  // readyState 2 (loadeddata) only guarantees the CURRENT
+                  // frame decoded — nowhere near enough to promise smooth
+                  // playback through the whole clip. readyState 4 /
+                  // canplaythrough is the browser's own estimate that it
+                  // can play through without stalling to buffer more.
+                  if ((el as HTMLVideoElement).readyState >= 4) return resolve();
+                  el.addEventListener("canplaythrough", () => resolve(), { once: true });
                 } else {
                   if ((el as HTMLImageElement).complete) return resolve();
                   el.addEventListener("load", () => resolve(), { once: true });
@@ -316,6 +325,13 @@ export default function ThresholdScene() {
 
       whenMediaReady([bg, bgShot, doorLeft, doorRight, handleLeft, handleRight]).then(() => {
         if (cancelled) return;
+
+        // Deferred from mount (see the comment by wipePlayer/finalePlayer's
+        // construction) — bg.mp4 now has priority on the network, and
+        // neither of these is needed until well past phase 1's own ~8s
+        // runtime, so starting them here costs nothing in practice.
+        wipePlayer?.load();
+        finalePlayer?.load();
 
         seq = gsap.timeline({ defaults: { ease: "none" }, onComplete: maybeStartPhase2 });
 
