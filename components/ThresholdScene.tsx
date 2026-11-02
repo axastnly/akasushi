@@ -323,7 +323,28 @@ export default function ThresholdScene() {
         );
       }
 
-      whenMediaReady([bg, bgShot, doorLeft, doorRight, handleLeft, handleRight]).then(() => {
+      // The handles-filling-then-doors-fading-in animation now doubles as
+      // the loading indicator: it starts immediately at mount (unlike the
+      // reveal below, it isn't gated on whenMediaReady) so there's visible
+      // feedback the instant the page loads instead of a blank black
+      // screen for however long assets take. Its own pacing is untouched.
+      const indicatorTl = gsap.timeline({ defaults: { ease: "none" } });
+      if (handles.length) {
+        indicatorTl.to(handles, { "--fill": 100, duration: 2.0 * PACE, ease: "power2.inOut" });
+      }
+      indicatorTl.to(doors, { opacity: 1, duration: 1 * PACE, ease: "power1.out" }, `+=${0.15 * PACE}`);
+      const indicatorDone = new Promise<void>((resolve) => {
+        indicatorTl.eventCallback("onComplete", () => resolve());
+      });
+
+      // The door-opening reveal waits for BOTH signals — whichever finishes
+      // later wins. On a fast connection, media is ready well before the
+      // indicator finishes playing, so nothing changes: the indicator just
+      // runs its full course exactly as before, then doors open. On a slow
+      // one, the indicator finishes and holds at "doors lit, closed" — a
+      // sensible paused state, not a freeze — until media actually catches
+      // up.
+      Promise.all([indicatorDone, whenMediaReady([bg, bgShot, doorLeft, doorRight, handleLeft, handleRight])]).then(() => {
         if (cancelled) return;
 
         // Deferred from mount (see the comment by wipePlayer/finalePlayer's
@@ -335,13 +356,7 @@ export default function ThresholdScene() {
 
         seq = gsap.timeline({ defaults: { ease: "none" }, onComplete: maybeStartPhase2 });
 
-        if (handles.length) {
-          seq.to(handles, { "--fill": 100, duration: 2.0 * PACE, ease: "power2.inOut" });
-        }
-
-        seq.to(doors, { opacity: 1, duration: 1 * PACE, ease: "power1.out" }, `+=${0.15 * PACE}`);
-
-        const doorOpenStart = seq.duration() + 0.4 * PACE;
+        const doorOpenStart = 0.4 * PACE;
         const doorOpenDuration = 1.8 * PACE;
 
         seq
@@ -389,6 +404,7 @@ export default function ThresholdScene() {
       return () => {
         cancelled = true;
         st.kill();
+        indicatorTl.kill();
         seq?.kill();
         titleCardTl?.kill();
         bg.removeEventListener("ended", maybeStartPhase2);
