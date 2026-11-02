@@ -33,8 +33,12 @@ const FINALE_DIM_MAX = 35;
 // which an overlapping/shortened footer can't guarantee). It's revealed
 // as an overlay over the still-full-frame, still-fixed finale canvas
 // during this last stretch of finale progress, then both settle into a
-// normal static block together once the pin naturally unpins.
-const FOOTER_REVEAL_START = 0.78;
+// normal static block together once the pin naturally unpins. Synced to
+// start exactly with FINALE_DIM_START, not independently — the footer
+// should only appear once the dim gradient is already rising, i.e. the
+// last (1 - FINALE_DIM_START) fraction of finale.mp4's own duration
+// (0.92 → the last ~2s of its 25.08s length).
+const FOOTER_REVEAL_START = FINALE_DIM_START;
 const PHASE1_SCROLL_CAP = 0.1;
 const PACE = 1.4;
 // Real-time length of the phase-1 -> phase-2 handoff fade (bg--main fading
