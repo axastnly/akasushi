@@ -648,7 +648,6 @@ ul {
 .site-footer {
   position: relative;
   z-index: 20;
-  background: var(--black);
   max-width: 1250px;
   margin-inline: auto;
   padding: 100px 40px 0;
