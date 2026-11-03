@@ -1,7 +1,12 @@
+"use client";
+
 import Button from "./Button";
 import { asset } from "@/lib/paths";
+import { useReserveModal } from "./ReserveModalProvider";
 
 export default function Chrome() {
+  const { openReserve } = useReserveModal();
+
   return (
     <header className="chrome">
       <div className="chrome__container">
@@ -16,7 +21,7 @@ export default function Chrome() {
           />
         </a>
 
-        <Button href="#reserve" variant="primary" aria-label="Reserve your night at AKA">
+        <Button type="button" onClick={openReserve} variant="primary" aria-label="Reserve your night at AKA">
           Reserve
         </Button>
       </div>

@@ -14,6 +14,7 @@ import { WebCodecsPlayer } from "@/lib/webcodecsPlayer";
 import { asset } from "@/lib/paths";
 import Button from "./Button";
 import Footer from "./Footer";
+import { useReserveModal } from "./ReserveModalProvider";
 
 /* Ported from the Vite site's scene-00-threshold.js — same four-phase
    choreography (auto intro → wipe scrub → title card → finale scrub),
@@ -70,6 +71,7 @@ function smoothProgress(current: number, target: number) {
 }
 
 export default function ThresholdScene() {
+  const { openReserve } = useReserveModal();
   const sectionRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLVideoElement>(null);
@@ -621,7 +623,7 @@ export default function ThresholdScene() {
               </span>
             </p>
             <div className="scene__cta-group" ref={ctaGroupRef}>
-              <Button href="#reserve" variant="primary" aria-label="Reserve a table">
+              <Button type="button" onClick={openReserve} variant="primary" aria-label="Reserve a table">
                 Reserve
               </Button>
               <Button href="#menu" variant="secondary" aria-label="View menu">
