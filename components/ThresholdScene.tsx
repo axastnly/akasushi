@@ -155,13 +155,25 @@ export default function ThresholdScene() {
     const chrome = document.querySelector(".chrome");
 
     // wipePlayer/finalePlayer fetch their whole source file up front
-    // (1.7MB and 8.5MB) — starting that immediately would compete for
-    // bandwidth with bg.mp4 right as it needs to buffer enough to play
-    // the intro smoothly. Neither is needed until well past phase 1, so
-    // their .load() calls are deferred until bg.mp4 itself is actually
-    // ready (see whenMediaReady below), not fired here at mount.
+    // (2.2MB, and ~6.5MB/~4.2MB for finale desktop/mobile) — starting that
+    // immediately would compete for bandwidth with bg.mp4 right as it
+    // needs to buffer enough to play the intro smoothly. Neither is
+    // needed until well past phase 1, so their .load() calls are deferred
+    // until bg.mp4 itself is actually ready (see whenMediaReady below),
+    // not fired here at mount.
+    // finale.mp4 has separate desktop/mobile source files (same breakpoint
+    // as globals.css's `min-width: 48em` desktop rules) — checked once at
+    // mount, not kept in sync with later resizes/orientation changes,
+    // since swapping the source mid-scrub would restart decoding from
+    // scratch.
+    const isDesktop = window.matchMedia("(min-width: 48em)").matches;
     const wipePlayer = wipeCanvas ? new WebCodecsPlayer(wipeCanvas, asset("/assets/00-threshold/bg-wipe.mp4")) : null;
-    const finalePlayer = finaleCanvas ? new WebCodecsPlayer(finaleCanvas, asset("/assets/00-threshold/finale.mp4")) : null;
+    const finalePlayer = finaleCanvas
+      ? new WebCodecsPlayer(
+          finaleCanvas,
+          asset(isDesktop ? "/assets/00-threshold/finale-desktop.mp4" : "/assets/00-threshold/finale-mobile.mp4"),
+        )
+      : null;
 
     const mmContext = mm.add(MOTION_OK, () => {
       if (copy) gsap.set(copy, { opacity: 1 });
