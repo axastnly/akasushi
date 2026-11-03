@@ -24,7 +24,23 @@ import Footer from "./Footer";
 const PIN_LENGTH = "+=650%";
 const WIPE_FRACTION = 0.28;
 const TITLE_FRACTION = 0.22;
-const BG_SHOT_FADE_FRACTION = 0.04;
+// bg--main -> bgShot (the webp) is a fixed-duration fade with scroll
+// completely locked (see lenis.stop()/start() in the effect below) — not
+// scroll-driven, because there's nothing to drive it with: no scroll
+// input reaches the page until this fade's onComplete calls lenis.start().
+// That's what makes the handoff deterministic every time, instead of
+// racing however fast the user happens to scroll.
+const BG_FADE_DURATION = 1.4;
+// Once unlocked, bgShot itself fades over this fraction of scroll to
+// reveal wipeCanvas underneath.
+const BG_SHOT_FADE_FRACTION = 0.03;
+// wipeCanvas's own scrub (below) only starts advancing past this point —
+// without it, the wipe video's progress would race ahead in lockstep with
+// bgShot's fade-out, so by the time bgShot finishes revealing it, it's
+// already well past its first frame (a visible jump instead of a clean
+// reveal). Holding wipeProgress at 0 until bgShot's fade is done
+// guarantees wipeCanvas is still on frame 0 — matching bgShot — no matter
+// how fast that fade gets scrolled through.
 const FINALE_DIM_START = 0.92;
 const FINALE_DIM_MAX = 35;
 // The footer lives inside the pinned stage itself (not after it in normal
@@ -39,14 +55,7 @@ const FINALE_DIM_MAX = 35;
 // last (1 - FINALE_DIM_START) fraction of finale.mp4's own duration
 // (0.92 → the last ~2s of its 25.08s length).
 const FOOTER_REVEAL_START = FINALE_DIM_START;
-const PHASE1_SCROLL_CAP = 0.1;
 const PACE = 1.4;
-// Real-time length of the phase-1 -> phase-2 handoff fade (bg--main fading
-// out to reveal bgShot underneath). Scroll-driven, not time-driven, but the
-// handoff itself runs on a clock so bgShot must stay locked at full opacity
-// for this long regardless of how fast the user keeps scrolling — see the
-// phase1EndTime gate in the ScrollTrigger onUpdate handler below.
-const HANDOFF_DURATION = 1.6 * PACE;
 
 /* Frame-rate-independent exponential lerp — smooths the discrete frame
    picks WebCodecs scrubbing produces (same reasoning as the AVIF
@@ -106,15 +115,18 @@ export default function ThresholdScene() {
     // succeeds. See lib/webcodecsPlayer.ts for the related (but distinct)
     // "never actually played" seeking bug this doesn't fully overlap with.
     let primed = false;
-    const primeVideo = () => {
-      if (primed) return;
+    const disablePriming = () => {
       primed = true;
-      bg.play()
-        .then(() => bg.pause())
-        .catch(() => {});
       window.removeEventListener("touchstart", primeVideo);
       window.removeEventListener("pointerdown", primeVideo);
       window.removeEventListener("wheel", primeVideo);
+    };
+    const primeVideo = () => {
+      if (primed) return;
+      disablePriming();
+      bg.play()
+        .then(() => bg.pause())
+        .catch(() => {});
     };
     window.addEventListener("touchstart", primeVideo, { passive: true });
     window.addEventListener("pointerdown", primeVideo);
@@ -160,7 +172,6 @@ export default function ThresholdScene() {
       let cancelled = false;
       let phase1Done = false;
       let phase1EndProgress = 0;
-      let phase1EndTime = 0;
       let finaleVisible = false;
       let smoothedWipeProgress = 0;
       let smoothedFinaleProgress = 0;
@@ -192,19 +203,32 @@ export default function ThresholdScene() {
           : null;
 
       let introPartsRemaining = 2;
+      let bgFadeTween: gsap.core.Tween | null = null;
       const maybeStartPhase2 = () => {
         introPartsRemaining -= 1;
         if (introPartsRemaining > 0 || cancelled) return;
 
-        phase1Done = true;
-        phase1EndProgress = st.progress;
-        phase1EndTime = performance.now();
-        // bg--main fades out; bgShot just sits at full opacity underneath
-        // it the whole time (no fade-in of its own), so fading bg out is
-        // what reveals it — a fade-out only, not a crossfade.
-        gsap.to(bg, { opacity: 0, duration: HANDOFF_DURATION, ease: "sine.inOut" });
+        // Scroll has been locked (lenis.stop(), in page.tsx) since before
+        // this component even mounted, so nothing can race this fade: it
+        // plays out on its own clock with zero scroll input reaching the
+        // page, and only once it's visually finished do we hand control
+        // back — from this exact, repeatable point every time.
+        // bg--main fades out; bgShot sits at full opacity underneath it
+        // the whole time (no fade-in of its own), so fading bg out is what
+        // reveals it — a fade-out only, not a crossfade.
         if (bgShot) gsap.set(bgShot, { opacity: 1 });
-        if (wipeCanvas) gsap.set(wipeCanvas, { opacity: 1, delay: HANDOFF_DURATION });
+        bgFadeTween = gsap.to(bg, {
+          opacity: 0,
+          duration: BG_FADE_DURATION,
+          ease: "sine.inOut",
+          onComplete: () => {
+            if (cancelled) return;
+            phase1Done = true;
+            phase1EndProgress = st.progress;
+            if (wipeCanvas) gsap.set(wipeCanvas, { opacity: 1 });
+            getLenis()?.start();
+          },
+        });
       };
 
       const st = ScrollTrigger.create({
@@ -216,27 +240,31 @@ export default function ThresholdScene() {
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
-          if (!phase1Done && self.progress > PHASE1_SCROLL_CAP) {
-            window.scrollTo(0, self.start + PHASE1_SCROLL_CAP * (self.end - self.start));
-          }
-
+          // No scroll-cap/reset needed here anymore: lenis.stop() (in
+          // page.tsx) blocks scroll input at the source for the whole
+          // auto-intro + bg-fade handoff, so self.progress simply can't
+          // move past where it was at mount until maybeStartPhase2's
+          // onComplete calls lenis.start() and sets phase1Done.
           if (!phase1Done || !wipeCanvas) return;
           const remaining = 1 - phase1EndProgress;
           const rawProgress = remaining > 0 ? (self.progress - phase1EndProgress) / remaining : 1;
 
-          const wipeProgress = gsap.utils.clamp(0, 1, rawProgress / WIPE_FRACTION);
+          // bgShot fades out over the first BG_SHOT_FADE_FRACTION of scroll
+          // past unlock, revealing wipeCanvas underneath. wipeCanvas's own
+          // scrub is held at 0 until that's done (see the constant's
+          // comment) so it can't flash ahead of its first frame even if
+          // that fraction gets scrolled through in one fast swipe.
+          const wipeProgress = gsap.utils.clamp(
+            0,
+            1,
+            (rawProgress - BG_SHOT_FADE_FRACTION) / (WIPE_FRACTION - BG_SHOT_FADE_FRACTION),
+          );
           smoothedWipeProgress = smoothProgress(smoothedWipeProgress, wipeProgress);
           wipePlayer?.seekToProgress(smoothedWipeProgress);
 
-          // Scroll can keep advancing wipeProgress during the handoff fade
-          // (users don't pause while bg--main fades out), and
-          // BG_SHOT_FADE_FRACTION is a narrow window — without this gate,
-          // bgShot would already be fading back out before bg--main had
-          // finished revealing it, hiding the fade almost entirely. Hold
-          // bgShot at full opacity until the time-based handoff is done.
-          if (bgShot && performance.now() - phase1EndTime >= HANDOFF_DURATION * 1000) {
-            const shotOpacity = 1 - gsap.utils.clamp(0, 1, wipeProgress / BG_SHOT_FADE_FRACTION);
-            gsap.set(bgShot, { opacity: shotOpacity });
+          if (bgShot) {
+            const shotFadeProgress = gsap.utils.clamp(0, 1, rawProgress / BG_SHOT_FADE_FRACTION);
+            gsap.set(bgShot, { opacity: 1 - shotFadeProgress });
           }
 
           if (titleCardTl) {
@@ -288,6 +316,10 @@ export default function ThresholdScene() {
       const skipLink = document.querySelector(".skip-link");
       const onSkip = (e: Event) => {
         e.preventDefault();
+        // Scroll may still be locked (lenis.stop(), see maybeStartPhase2)
+        // if this is clicked before the auto-intro/handoff finished on its
+        // own — unlock first or the jump below is silently swallowed.
+        getLenis()?.start();
         getLenis()?.scrollTo(st.end, { immediate: true });
         // The footer's reveal is normally gated on phase1Done inside
         // onUpdate — if this is clicked before the intro naturally
@@ -363,6 +395,14 @@ export default function ThresholdScene() {
           .fromTo(bg, { opacity: 0 }, { opacity: 1, duration: doorOpenDuration, ease: "power2.inOut" }, doorOpenStart)
           .call(
             () => {
+              // Real intro playback is starting now — any gesture-triggered
+              // priming after this point would only ever hit an already-
+              // playing or already-ended video, so disarm it here rather
+              // than leaving it armed to misfire later (see primeVideo
+              // above: calling .play() on an ended video resets it to
+              // frame 0, which used to flash during the phase-1→2 fade if
+              // the user's first touch/scroll landed after the video end).
+              disablePriming();
               bg.currentTime = 0;
               bg.play().catch(() => {});
             },
@@ -406,10 +446,14 @@ export default function ThresholdScene() {
         st.kill();
         indicatorTl.kill();
         seq?.kill();
+        bgFadeTween?.kill();
         titleCardTl?.kill();
         bg.removeEventListener("ended", maybeStartPhase2);
         skipLink?.removeEventListener("click", onSkip);
         bg.pause();
+        // Guards against unmounting mid-intro/mid-fade leaving scroll
+        // permanently locked — a no-op if it was already started.
+        if (!phase1Done) getLenis()?.start();
         wipePlayer?.destroy();
         finalePlayer?.destroy();
         if (wipeCanvas) gsap.set(wipeCanvas, { clearProps: "all" });

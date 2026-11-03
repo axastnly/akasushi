@@ -19,6 +19,10 @@ export default function Home() {
 
     const lenis = startSmoothScroll();
     lenis?.scrollTo(0, { immediate: true, force: true });
+    // Locked until ThresholdScene's auto-intro + bg-to-webp handoff finish
+    // (it calls lenis.start() itself once that's done) — no scroll input
+    // of any kind should reach the page before then.
+    lenis?.stop();
 
     let userInteracted = false;
     const markInteracted = () => {

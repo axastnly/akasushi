@@ -82,7 +82,8 @@ html.lenis body {
 .lenis.lenis-smooth {
   scroll-behavior: auto !important;
 }
-.lenis.lenis-stopped {
+.lenis.lenis-stopped,
+.lenis.lenis-stopped body {
   overflow: hidden;
 }
 
