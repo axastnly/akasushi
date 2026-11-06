@@ -534,23 +534,6 @@ ul {
   inset: 0;
   background: radial-gradient(circle at 18% 88%, #1f0000 0%, #000000 77%);
 }
-.title-card__trees,
-.title-card__birds {
-  position: absolute;
-  height: auto;
-  filter: blur(0px) brightness(1);
-}
-.title-card__trees {
-  left: 0;
-  bottom: 0;
-  width: clamp(240px, 34vw, 500px);
-}
-.title-card__birds {
-  right: 0;
-  top: 0;
-  width: clamp(170px, 24vw, 360px);
-  transform-origin: left center;
-}
 .title-card__vignette {
   position: absolute;
   inset: 0;
