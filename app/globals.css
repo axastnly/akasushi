@@ -153,6 +153,14 @@ ul {
   opacity: 0;
   visibility: hidden;
 }
+/* For pages without ThresholdScene's own GSAP autoAlpha reveal (see
+   Chrome.tsx's alwaysVisible prop) — the prefers-reduced-motion block
+   further down has its own .chrome.is-visible rule too, scoped to that
+   media query; this is the unscoped version other pages need. */
+.chrome.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
 .chrome__container {
   padding: 1.7rem 2.5rem;
   padding-top: max(1.7rem, env(safe-area-inset-top, 0px));
@@ -891,5 +899,296 @@ a.site-footer__text:focus-visible {
   .reserve-modal__option-icon {
     width: 70px;
     height: 70px;
+  }
+}
+
+/* ── Menu page ────────────────────────────────────────────────────────
+   Ported from Figma (AKA Design, node 878:733 "Vertical Menu") — its own
+   code layer's CSS, kept as close to verbatim as possible. Two
+   deliberate departures from the source: font-family swapped from the
+   design's Georgia/Helvetica placeholders to this project's
+   --font-display/--font-ui tokens, and the design's own header +
+   reservation-dialog rules are dropped entirely (the page uses the
+   site's existing .chrome navbar and .reserve-modal instead — see
+   app/menu/page.tsx). Colors, spacing, sizes, and breakpoints (including
+   the design's own px-based 900px/640px breakpoints, not this site's
+   usual 47.99em one) are all unchanged from the source.
+   font-weight: 400 on .menu-page overrides this site's body default of
+   300 — the design assumed an unstyled browser default (400) for any
+   text that doesn't set its own weight; without this override, TT Drugs
+   at 300 would read lighter here than the design intended. */
+.menu-page {
+  min-height: 100dvh;
+  overflow: clip;
+  background: #000;
+  color: #fff;
+  font-weight: 400;
+}
+
+.menu-layout {
+  display: grid;
+  width: min(100% - 6.7vw, 1398px);
+  margin: 20px auto 0;
+  grid-template-columns: 294px minmax(0, 1076px);
+  gap: 28px;
+}
+
+.category-selector {
+  position: sticky;
+  top: 165px;
+  display: flex;
+  height: max-content;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px 0;
+}
+
+.category-tab {
+  width: 100%;
+  overflow: hidden;
+  padding: 7px 12px;
+  border: 0;
+  border-left: 2px solid transparent;
+  color: rgb(255 255 255 / 70%);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 17px;
+  line-height: normal;
+  text-align: left;
+  white-space: nowrap;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+.category-tab:hover {
+  color: #fff;
+  transform: translateX(4px);
+}
+.category-tab--active {
+  border-left-color: #fff;
+  color: #fff;
+  font-weight: 700;
+}
+.category-tab:focus-visible {
+  outline: 2px solid #dd443c;
+  outline-offset: 4px;
+}
+
+.menu-content {
+  min-width: 0;
+  scroll-margin-top: 145px;
+}
+.menu-content > h1 {
+  margin: 19px 28px 7px;
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 400;
+  letter-spacing: -0.96px;
+  line-height: normal;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 28px;
+  scroll-margin-top: 155px;
+}
+.menu-section > h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.dish-hero {
+  position: relative;
+  height: 452px;
+  overflow: hidden;
+  border-radius: 5px;
+  box-shadow: 0 20px 250px -30px rgb(143 34 11 / 40%);
+}
+.dish-hero__texture,
+.dish-hero__plate {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+}
+.dish-hero__texture {
+  top: -187.48%;
+  left: 0;
+  width: 100%;
+  height: 360%;
+}
+.dish-hero__plate {
+  top: -41.21%;
+  left: -16.54%;
+  width: 116.52%;
+  height: 175.54%;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 100px;
+  row-gap: 30px;
+}
+
+.menu-item {
+  display: flex;
+  min-height: 126px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 30px 15px;
+  border-bottom: 1.5px solid rgb(255 255 255 / 10%);
+}
+.menu-item h3 {
+  margin: 0 0 15px;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: 0.21px;
+  line-height: 1.1;
+}
+.menu-item__group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  color: #dd443c;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.1px;
+  line-height: 1.3;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.menu-item__group::after {
+  width: 100%;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, rgb(221 68 60 / 65%), rgb(221 68 60 / 0%));
+}
+.menu-item:has(.menu-item__group) {
+  position: relative;
+  padding-top: 36px;
+}
+.menu-item:has(.menu-item__group) .menu-item__price {
+  margin-top: 30px;
+}
+.menu-item__details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: rgb(255 255 255 / 70%);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.3;
+}
+.menu-item__details p,
+.menu-item__price {
+  margin: 0;
+}
+.menu-item__price {
+  flex: none;
+  color: #dd443c;
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: 0.34px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .menu-layout {
+    display: flex;
+    width: 100%;
+    margin: 0;
+    flex-direction: column;
+    gap: 0;
+  }
+  .category-selector {
+    z-index: 20;
+    top: 108px;
+    overflow-x: auto;
+    width: 100%;
+    flex-direction: row;
+    gap: 8px;
+    padding: 14px 24px;
+    background: rgb(0 0 0 / 92%);
+    scrollbar-width: none;
+  }
+  .category-selector::-webkit-scrollbar {
+    display: none;
+  }
+  .category-tab {
+    width: auto;
+    flex: none;
+    border-bottom: 1px solid transparent;
+    border-left: 0;
+    font-size: 14px;
+  }
+  .category-tab--active {
+    border-bottom-color: #fff;
+  }
+  .category-tab:hover {
+    transform: none;
+  }
+  .menu-content {
+    scroll-margin-top: 170px;
+  }
+  .menu-content > h1 {
+    margin: 28px 24px 12px;
+    font-size: 42px;
+  }
+  .menu-section {
+    gap: 28px;
+    padding: 24px;
+  }
+  .dish-hero {
+    height: clamp(260px, 52vw, 430px);
+  }
+  .menu-grid {
+    column-gap: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .menu-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .menu-item {
+    min-height: 0;
+    padding: 25px 4px;
+  }
+  .menu-item:has(.menu-item__group) {
+    padding-top: 32px;
+  }
+  .menu-section > h2 {
+    font-size: 28px;
+  }
+  .dish-hero {
+    height: 260px;
+  }
+  .dish-hero__texture {
+    top: -116%;
+    height: 260%;
+  }
+  .dish-hero__plate {
+    top: -8%;
+    left: -40%;
+    width: 180%;
+    height: 122%;
   }
 }

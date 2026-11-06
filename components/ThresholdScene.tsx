@@ -626,7 +626,7 @@ export default function ThresholdScene() {
               <Button type="button" onClick={openReserve} variant="primary" aria-label="Reserve a table">
                 Reserve
               </Button>
-              <Button href="#menu" variant="secondary" aria-label="View menu">
+              <Button href={asset("/menu")} variant="secondary" aria-label="View menu">
                 View Menu
               </Button>
             </div>
