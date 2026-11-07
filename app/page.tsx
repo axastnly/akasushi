@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Chrome from "@/components/Chrome";
 import ThresholdScene from "@/components/ThresholdScene";
+import ThresholdDoors from "@/components/ThresholdDoors";
 import ReserveModalProvider from "@/components/ReserveModalProvider";
 import { startSmoothScroll, refreshWhenSettled, trackScrollState } from "@/lib/motion";
 
@@ -57,6 +58,7 @@ export default function Home() {
         Skip the intro
       </a>
       <Chrome />
+      <ThresholdDoors />
       <main>
         <ThresholdScene />
       </main>
