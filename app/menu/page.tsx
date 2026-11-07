@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Chrome from "@/components/Chrome";
+import Footer from "@/components/Footer";
 import ReserveModalProvider from "@/components/ReserveModalProvider";
 import { asset } from "@/lib/paths";
 import { menuData, type MenuCategory } from "@/lib/menuData";
@@ -105,7 +106,7 @@ export default function MenuPage() {
 
   return (
     <ReserveModalProvider>
-      <Chrome alwaysVisible />
+      <Chrome alwaysVisible blur />
       <div className="menu-page">
         <main id="menu" className="menu-layout">
           <aside className="category-selector" ref={categorySelectorRef} aria-label="Menu categories">
@@ -133,6 +134,7 @@ export default function MenuPage() {
           </div>
         </main>
       </div>
+      <Footer />
     </ReserveModalProvider>
   );
 }
