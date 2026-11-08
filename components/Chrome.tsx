@@ -42,12 +42,19 @@ export default function Chrome({ alwaysVisible = false, blur = false }: ChromePr
     const footer = document.getElementById("site-footer");
     if (!footer) return;
     e.preventDefault();
+    // On the homepage the footer lives inside the pinned scene and is only
+    // revealed at the very end of its scroll. The skip link's handler
+    // (ThresholdScene) already jumps there AND forces the footer visible even
+    // mid-intro, so reuse it.
+    const skip = footer.closest(".scene__pin") ? document.querySelector<HTMLAnchorElement>(".skip-link") : null;
+    if (skip) {
+      skip.click();
+      return;
+    }
     const lenis = document.documentElement.classList.contains("lenis") ? getLenis() : null;
     if (lenis) {
       lenis.start();
-      // On the homepage the footer lives inside the pinned scene and is only
-      // revealed at the very end of its scroll — that's the page's end.
-      lenis.scrollTo(footer.closest(".scene__pin") ? lenis.limit : footer, { immediate: true });
+      lenis.scrollTo(footer, { immediate: true });
     } else {
       footer.scrollIntoView({ behavior: "smooth", block: "start" });
     }
